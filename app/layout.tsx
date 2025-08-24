@@ -7,6 +7,9 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Crossover Gen - 3D Printable Speaker Crossover Plate Designer',
   description: 'Design and generate 3D printable mounting plates for speaker crossover components',
+  icons: {
+    icon: '/favicon.svg',
+  },
 }
 
 export default function RootLayout({
