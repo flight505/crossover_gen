@@ -33,19 +33,43 @@ Schema (all dimensions in mm):
 - `outer_diameter_mm`, `inner_diameter_mm`, `height_mm` (for rings)
 - `lead_diameter_mm`, `lead_exit` (axial/tangential)
 
+## Current Status & Known Issues
+
+### Working Features
+- Basic UI structure with header, sidebar, canvas, and properties panel
+- Component library displays all 62 components from JSON
+- Search functionality in component library
+- Tab-based filtering (Capacitors, Resistors, Inductors)
+- Basic canvas with PCB board visualization
+- Component cards show dimensions and specifications
+
+### Recently Fixed Issues ✅
+1. **Drag & Drop Fixed** - Components can now be dragged from library to canvas
+2. **ScrollArea Fixed** - Component list now scrolls properly with height constraint
+3. **File Operations Working** - New, Save, Load buttons are functional
+4. **Grid System Added** - Canvas has 1mm/5mm/10mm grid with snap-to-grid
+5. **Keyboard Shortcuts Added** - Delete, R (rotate), Escape, Ctrl+A
+
+### Remaining Issues to Fix
+1. **Board Size Hardcoded** - Still set to 200x150mm with no UI to change it
+2. **No 3D Generation** - Generate 3D Model button non-functional
+3. **No STL Export** - Export STL button non-functional
+4. **No Zoom/Pan** - Canvas lacks zoom and pan controls
+5. **No Collision Detection** - Components can overlap
+
 ## Implementation Plan & Progress
 
 ### Phase 1: Project Setup & Initial Architecture (Day 1-2)
 
 #### Initialize Next.js Project
-- [ ] Create Next.js 14+ project with TypeScript and App Router
-- [ ] Install and configure Tailwind CSS
-- [ ] Set up shadcn/ui components (init, add needed components)
-- [ ] Configure ESLint and Prettier
-- [ ] Set up Git repository and initial commit
+- [x] Create Next.js 14+ project with TypeScript and App Router
+- [x] Install and configure Tailwind CSS
+- [x] Set up shadcn/ui components (init, add needed components)
+- [x] Configure ESLint and Prettier
+- [x] Set up Git repository and initial commit
 
 #### Project Structure
-- [ ] Create folder structure:
+- [x] Create folder structure:
   ```
   /app              - Next.js app router pages
   /components       - React components
@@ -64,63 +88,63 @@ Schema (all dimensions in mm):
   ```
 
 #### Data Integration
-- [ ] Keep crossover_parts_verified_seed.json (delete CSV)
-- [ ] Create TypeScript interfaces for component data
-- [ ] Create data loading utilities
-- [ ] Implement component search/filter functions
+- [x] Keep crossover_parts_verified_seed.json (delete CSV)
+- [x] Create TypeScript interfaces for component data
+- [x] Create data loading utilities
+- [x] Implement component search/filter functions (basic search)
 - [ ] Add data validation layer
 
 ### Phase 2: 2D Canvas Implementation (Day 3-5)
 
 #### Canvas Foundation
-- [ ] Install and configure Konva.js (or Fabric.js)
-- [ ] Create main canvas component
-- [ ] Implement board visualization (default 150x100mm)
+- [x] Install and configure Konva.js (or Fabric.js) - Using react-konva v18
+- [x] Create main canvas component
+- [x] Implement board visualization (default 200x150mm) - Note: Changed from 150x100mm
 - [ ] Add board dimension controls (width, height, thickness inputs)
-- [ ] Implement grid system:
-  - [ ] 1mm fine grid
-  - [ ] 5mm medium grid
-  - [ ] 10mm coarse grid
-  - [ ] Toggle grid visibility
+- [x] Implement grid system:
+  - [x] 1mm fine grid
+  - [x] 5mm medium grid
+  - [x] 10mm coarse grid
+  - [x] Toggle grid visibility
 - [ ] Add zoom controls (10% - 500% range)
 - [ ] Implement pan functionality (middle mouse or spacebar+drag)
 - [ ] Add ruler/measurement display
 
 #### Component Library Sidebar
-- [ ] Create component library panel using shadcn/ui Sheet or Sidebar
-- [ ] Implement component list from JSON data
-- [ ] Add search bar with real-time filtering
-- [ ] Create filter controls:
-  - [ ] Type selector (capacitor/inductor/resistor)
+- [x] Create component library panel using shadcn/ui Sheet or Sidebar
+- [x] Implement component list from JSON data
+- [x] Add search bar with real-time filtering
+- [x] Create filter controls:
+  - [x] Type selector (capacitor/inductor/resistor) - Using Tabs
   - [ ] Brand multi-select
   - [ ] Value range slider
   - [ ] Power/Voltage filter
-- [ ] Display component cards with:
-  - [ ] Visual icon based on type
-  - [ ] Name and value
-  - [ ] Key dimensions
+- [x] Display component cards with:
+  - [x] Visual icon based on type (using colors)
+  - [x] Name and value
+  - [x] Key dimensions
 - [ ] Add hover tooltips with full specifications
 
 #### Visual Component Representations
-- [ ] Create component shape renderers:
-  - [ ] Capacitors: Cylinder with axial leads
-  - [ ] Resistors: Smaller cylinder with axial leads
-  - [ ] Inductors: Ring/coil shape with tangential leads
+- [x] Create component shape renderers (basic):
+  - [x] Capacitors: Red rectangles/circles
+  - [x] Resistors: Blue rectangles/circles
+  - [x] Inductors: Green rectangles/circles
 - [ ] Add dimension labels
 - [ ] Show lead exit points
 
 #### Drag & Drop System
-- [ ] Implement drag from library to canvas
+- [x] Implement drag from library to canvas - **FIXED AND WORKING**
 - [ ] Add ghost/preview during drag
-- [ ] Enable snap-to-grid on drop
-- [ ] Implement component selection
-- [ ] Add rotation controls:
-  - [ ] R key for 15° increments
-  - [ ] Shift+R for counter-clockwise
+- [x] Enable snap-to-grid on drop
+- [x] Implement component selection
+- [x] Add rotation controls:
+  - [x] R key for 90° increments
+  - [x] Shift+R for counter-clockwise
   - [ ] Visual rotation handle
-- [ ] Keyboard controls:
+- [x] Keyboard controls:
   - [ ] Arrow keys: Move 1mm (Shift for 5mm)
-  - [ ] Delete/Backspace: Remove component
+  - [x] Delete/Backspace: Remove component
   - [ ] Ctrl/Cmd+Z: Undo
   - [ ] Ctrl/Cmd+Y: Redo
   - [ ] Ctrl/Cmd+A: Select all

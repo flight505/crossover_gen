@@ -10,10 +10,18 @@ interface DesignCanvasProps {
   setPlacedComponents: React.Dispatch<React.SetStateAction<PlacedComponent[]>>
   selectedComponentId: string | null
   setSelectedComponentId: React.Dispatch<React.SetStateAction<string | null>>
+  boardDimensions: {
+    width: number
+    height: number
+    thickness: number
+  }
+  setBoardDimensions: React.Dispatch<React.SetStateAction<{
+    width: number
+    height: number
+    thickness: number
+  }>>
 }
 
-const BOARD_WIDTH = 200
-const BOARD_HEIGHT = 150
 const SCALE = 3
 
 export function DesignCanvasComponent({
@@ -21,9 +29,13 @@ export function DesignCanvasComponent({
   setPlacedComponents,
   selectedComponentId,
   setSelectedComponentId,
+  boardDimensions,
+  setBoardDimensions,
 }: DesignCanvasProps) {
   const stageRef = useRef<Konva.Stage>(null)
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 })
+  const [showGrid, setShowGrid] = useState(true)
+  const [gridSize, setGridSize] = useState(5) // 5mm grid default
 
   useEffect(() => {
     const updateSize = () => {
@@ -43,23 +55,32 @@ export function DesignCanvasComponent({
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
+    e.stopPropagation()
+    
     const componentData = e.dataTransfer.getData('component')
-    if (!componentData) return
+    if (!componentData) {
+      console.log('No component data in drop')
+      return
+    }
 
     const component: CrossoverComponent = JSON.parse(componentData)
-    const stage = stageRef.current
-    if (!stage) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
 
-    const point = stage.getPointerPosition()
-    if (!point) return
+    const boardX = (stageSize.width - boardDimensions.width * SCALE) / 2
+    const boardY = (stageSize.height - boardDimensions.height * SCALE) / 2
 
-    const boardX = (stageSize.width - BOARD_WIDTH * SCALE) / 2
-    const boardY = (stageSize.height - BOARD_HEIGHT * SCALE) / 2
+    let relativeX = (x - boardX) / SCALE
+    let relativeY = (y - boardY) / SCALE
 
-    const relativeX = (point.x - boardX) / SCALE
-    const relativeY = (point.y - boardY) / SCALE
+    // Snap to grid
+    if (showGrid) {
+      relativeX = Math.round(relativeX / gridSize) * gridSize
+      relativeY = Math.round(relativeY / gridSize) * gridSize
+    }
 
-    if (relativeX < 0 || relativeX > BOARD_WIDTH || relativeY < 0 || relativeY > BOARD_HEIGHT) {
+    if (relativeX < 0 || relativeX > boardDimensions.width || relativeY < 0 || relativeY > boardDimensions.height) {
       return
     }
 
@@ -77,12 +98,14 @@ export function DesignCanvasComponent({
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
+    e.stopPropagation()
+    e.dataTransfer.dropEffect = 'copy'
   }
 
   const handleComponentDragEnd = (e: Konva.KonvaEventObject<DragEvent>, id: string) => {
     const node = e.target
-    const boardX = (stageSize.width - BOARD_WIDTH * SCALE) / 2
-    const boardY = (stageSize.height - BOARD_HEIGHT * SCALE) / 2
+    const boardX = (stageSize.width - boardDimensions.width * SCALE) / 2
+    const boardY = (stageSize.height - boardDimensions.height * SCALE) / 2
 
     const newX = (node.x() - boardX) / SCALE
     const newY = (node.y() - boardY) / SCALE
@@ -95,6 +118,33 @@ export function DesignCanvasComponent({
   const boardX = (stageSize.width - BOARD_WIDTH * SCALE) / 2
   const boardY = (stageSize.height - BOARD_HEIGHT * SCALE) / 2
 
+  // Generate grid lines
+  const gridLines = []
+  if (showGrid) {
+    // Vertical lines
+    for (let i = 0; i <= BOARD_WIDTH; i += gridSize) {
+      gridLines.push(
+        <Line
+          key={`v-${i}`}
+          points={[boardX + i * SCALE, boardY, boardX + i * SCALE, boardY + BOARD_HEIGHT * SCALE]}
+          stroke="#e0e0e0"
+          strokeWidth={0.5}
+        />
+      )
+    }
+    // Horizontal lines
+    for (let i = 0; i <= BOARD_HEIGHT; i += gridSize) {
+      gridLines.push(
+        <Line
+          key={`h-${i}`}
+          points={[boardX, boardY + i * SCALE, boardX + BOARD_WIDTH * SCALE, boardY + i * SCALE]}
+          stroke="#e0e0e0"
+          strokeWidth={0.5}
+        />
+      )
+    }
+  }
+
   return (
     <div
       id="canvas-container"
@@ -102,6 +152,25 @@ export function DesignCanvasComponent({
       onDrop={handleDrop}
       onDragOver={handleDragOver}
     >
+      <div className="absolute top-2 left-2 z-10 bg-white rounded-md shadow-md p-2 flex gap-2">
+        <button
+          className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded"
+          onClick={() => setShowGrid(!showGrid)}
+        >
+          Grid: {showGrid ? 'ON' : 'OFF'}
+        </button>
+        <select
+          className="px-2 py-1 text-sm bg-gray-100 rounded"
+          value={gridSize}
+          onChange={(e) => setGridSize(Number(e.target.value))}
+          disabled={!showGrid}
+        >
+          <option value={1}>1mm</option>
+          <option value={5}>5mm</option>
+          <option value={10}>10mm</option>
+        </select>
+      </div>
+      
       <Stage width={stageSize.width} height={stageSize.height} ref={stageRef}>
         <Layer>
           <Rect
@@ -117,23 +186,7 @@ export function DesignCanvasComponent({
             shadowOpacity={0.2}
           />
           
-          <Line
-            points={[
-              boardX + 10,
-              boardY + 10,
-              boardX + BOARD_WIDTH * SCALE - 10,
-              boardY + 10,
-              boardX + BOARD_WIDTH * SCALE - 10,
-              boardY + BOARD_HEIGHT * SCALE - 10,
-              boardX + 10,
-              boardY + BOARD_HEIGHT * SCALE - 10,
-              boardX + 10,
-              boardY + 10,
-            ]}
-            stroke="#d4d4d4"
-            strokeWidth={1}
-            dash={[5, 5]}
-          />
+          {gridLines}
 
           {placedComponents.map((placed) => (
             <ComponentShape

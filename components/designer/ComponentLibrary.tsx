@@ -22,11 +22,13 @@ export function ComponentLibrary() {
   }
 
   const handleDragStart = (e: React.DragEvent, component: CrossoverComponent) => {
+    e.dataTransfer.effectAllowed = 'copy'
     e.dataTransfer.setData('component', JSON.stringify(component))
+    e.dataTransfer.setData('text/plain', `${component.brand} ${component.series} ${component.value}`)
   }
 
   return (
-    <div className="w-80 border-r bg-background flex flex-col">
+    <div className="w-80 border-r bg-background flex flex-col h-full">
       <div className="p-4 border-b">
         <h2 className="text-lg font-semibold mb-2">Component Library</h2>
         <input
@@ -37,14 +39,14 @@ export function ComponentLibrary() {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
-      <Tabs defaultValue="capacitors" className="flex-1 flex flex-col">
+      <Tabs defaultValue="capacitors" className="flex-1 flex flex-col overflow-hidden">
         <TabsList className="grid w-full grid-cols-3 px-4">
           <TabsTrigger value="capacitors">Capacitors</TabsTrigger>
           <TabsTrigger value="resistors">Resistors</TabsTrigger>
           <TabsTrigger value="inductors">Inductors</TabsTrigger>
         </TabsList>
-        <TabsContent value="capacitors" className="flex-1 px-4">
-          <ScrollArea className="h-full">
+        <TabsContent value="capacitors" className="flex-1 px-4 overflow-hidden">
+          <ScrollArea className="h-[calc(100vh-240px)]">
             <div className="space-y-2 pb-4">
               {filterComponents(getComponentsByType('capacitor')).map((component, idx) => (
                 <ComponentCard
@@ -56,8 +58,8 @@ export function ComponentLibrary() {
             </div>
           </ScrollArea>
         </TabsContent>
-        <TabsContent value="resistors" className="flex-1 px-4">
-          <ScrollArea className="h-full">
+        <TabsContent value="resistors" className="flex-1 px-4 overflow-hidden">
+          <ScrollArea className="h-[calc(100vh-240px)]">
             <div className="space-y-2 pb-4">
               {filterComponents(getComponentsByType('resistor')).map((component, idx) => (
                 <ComponentCard
@@ -69,8 +71,8 @@ export function ComponentLibrary() {
             </div>
           </ScrollArea>
         </TabsContent>
-        <TabsContent value="inductors" className="flex-1 px-4">
-          <ScrollArea className="h-full">
+        <TabsContent value="inductors" className="flex-1 px-4 overflow-hidden">
+          <ScrollArea className="h-[calc(100vh-240px)]">
             <div className="space-y-2 pb-4">
               {filterComponents(getComponentsByType('inductor')).map((component, idx) => (
                 <ComponentCard
