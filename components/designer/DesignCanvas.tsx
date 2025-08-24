@@ -16,7 +16,7 @@ const BOARD_WIDTH = 200
 const BOARD_HEIGHT = 150
 const SCALE = 3
 
-export function DesignCanvas({
+export function DesignCanvasComponent({
   placedComponents,
   setPlacedComponents,
   selectedComponentId,

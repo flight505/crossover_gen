@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Card } from '@/components/ui/card'
-import { loadComponents, getComponentsByType } from '@/lib/data-loader'
+import { getComponentsByType } from '@/lib/data-loader'
 import { CrossoverComponent } from '@/types'
 
 export function ComponentLibrary() {

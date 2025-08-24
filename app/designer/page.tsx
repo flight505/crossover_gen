@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { ComponentLibrary } from '@/components/designer/ComponentLibrary'
-import { DesignCanvas } from '@/components/designer/DesignCanvas'
+import { DesignCanvas } from '@/components/designer/DesignCanvasClient'
 import { Toolbar } from '@/components/designer/Toolbar'
 import { PropertiesPanel } from '@/components/designer/PropertiesPanel'
 import { PlacedComponent } from '@/types'
