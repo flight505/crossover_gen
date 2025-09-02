@@ -12,7 +12,19 @@ type JscadGeometry = object // JSCAD geometry type
  * Generate 3D model from IGS
  */
 export function generateJSCADModel(igs: IGS): JscadGeometry {
+  console.log('Generating JSCAD model with IGS:', {
+    board: igs.board,
+    componentCount: igs.components.length,
+    components: igs.components.map(c => ({
+      id: c.id,
+      shape: c.recess.shape,
+      dimensions: c.recess.dimensions,
+      position: c.position
+    }))
+  })
+  
   // Create base board centered at origin
+  // In JSCAD: X = width, Y = depth, Z = thickness (vertical)
   let board = cuboid({
     size: [igs.board.width, igs.board.height, igs.board.thickness]
   })
@@ -24,10 +36,13 @@ export function generateJSCADModel(igs: IGS): JscadGeometry {
     // Create recess based on shape
     let recess: JscadGeometry | null = null
     
-    if (comp.recess.shape === 'cylindrical') {
+    if (comp.recess.shape === 'cylinder') {
       // Cylindrical recess for capacitors/resistors
-      const radius = (comp.body.dimensions.diameter || 10) / 2 + comp.recess.clearance
-      const length = comp.body.dimensions.length || 20
+      const diameter = comp.recess.dimensions.diameter || 10
+      const radius = diameter / 2 + 0.5 // 0.5mm clearance
+      const length = comp.recess.dimensions.depth || comp.recess.dimensions.width || 20
+      
+      console.log(`Creating cylindrical recess: diameter=${diameter}mm, length=${length}mm, depth=${comp.recess.depth}mm`)
       
       // Create horizontal cylinder
       recess = cylinder({
@@ -40,10 +55,10 @@ export function generateJSCADModel(igs: IGS): JscadGeometry {
       recess = rotateY(Math.PI / 2, recess)
       recess = translate([0, 0, igs.board.thickness / 2 - comp.recess.depth / 2], recess)
       
-    } else if (comp.recess.shape === 'ring') {
+    } else if (comp.recess.shape === 'toroidal') {
       // Ring-shaped recess for coils
-      const outerRadius = (comp.body.dimensions.outerDiameter || 30) / 2 + comp.recess.clearance
-      const innerRadius = (comp.body.dimensions.innerDiameter || 15) / 2 - comp.recess.clearance
+      const outerRadius = (comp.recess.dimensions.outerDiameter || 30) / 2 + 0.5
+      const innerRadius = (comp.recess.dimensions.innerDiameter || 15) / 2 - 0.5
       
       // Create ring by subtracting inner cylinder from outer
       const outer = cylinder({
@@ -63,8 +78,8 @@ export function generateJSCADModel(igs: IGS): JscadGeometry {
       
     } else if (comp.recess.shape === 'rectangular') {
       // Rectangular recess
-      const width = (comp.body.dimensions.width || 20) + comp.recess.clearance * 2
-      const length = (comp.body.dimensions.length || 30) + comp.recess.clearance * 2
+      const width = (comp.recess.dimensions.width || 20) + 1 // 0.5mm clearance on each side
+      const length = (comp.recess.dimensions.depth || 30) + 1
       
       recess = cuboid({
         size: [width, length, comp.recess.depth * 2]
@@ -75,18 +90,21 @@ export function generateJSCADModel(igs: IGS): JscadGeometry {
     
     // Position and rotate the recess
     if (recess) {
-      recess = rotateZ(comp.position.rotation, recess)
-      recess = translate([comp.position.x, comp.position.y, 0], recess)
-      cutouts.push(recess)
+      const rotatedRecess = rotateZ(comp.rotation * Math.PI / 180, recess)
+      // In JSCAD coordinates: X stays X, Z from UI becomes Y in JSCAD
+      const positionedRecess = translate([comp.position.x, comp.position.z, 0], rotatedRecess)
+      cutouts.push(positionedRecess)
     }
     
     // Create lead holes
     comp.leadHoles.forEach(hole => {
       // Calculate absolute position with rotation
-      const cos = Math.cos(comp.position.rotation)
-      const sin = Math.sin(comp.position.rotation)
-      const holeX = comp.position.x + hole.x * cos - hole.y * sin
-      const holeY = comp.position.y + hole.x * sin + hole.y * cos
+      const rotRad = comp.rotation * Math.PI / 180
+      const cos = Math.cos(rotRad)
+      const sin = Math.sin(rotRad)
+      // Rotate hole position around component center
+      const holeX = comp.position.x + hole.position.x * cos - hole.position.z * sin
+      const holeY = comp.position.z + hole.position.x * sin + hole.position.z * cos
       
       let leadHole = cylinder({
         radius: hole.diameter / 2,
@@ -94,6 +112,7 @@ export function generateJSCADModel(igs: IGS): JscadGeometry {
         segments: 16
       })
       
+      // Position hole in JSCAD coordinates (X, Y, Z)
       leadHole = translate([holeX, holeY, 0], leadHole)
       cutouts.push(leadHole)
     })
@@ -108,28 +127,33 @@ export function generateJSCADModel(igs: IGS): JscadGeometry {
     })
     
     // Add countersink if specified
-    if (hole.countersink && hole.countersinkDiameter) {
+    if (hole.countersink) {
       const countersink = cylinder({
-        radius: hole.countersinkDiameter / 2,
+        radius: hole.diameter, // Countersink is typically 2x the hole diameter
         height: 2,
         segments: 16
       })
       
       const countersinkCutout = translate(
-        [hole.x, hole.y, igs.board.thickness / 2 - 1],
+        [hole.position.x, hole.position.z, igs.board.thickness / 2 - 1],
         countersink
       )
       cutouts.push(countersinkCutout)
     }
     
-    mountingHole = translate([hole.x, hole.y, 0], mountingHole)
+    mountingHole = translate([hole.position.x, hole.position.z, 0], mountingHole)
     cutouts.push(mountingHole)
   })
   
   // Subtract all cutouts from the board
+  console.log(`Total cutouts to subtract: ${cutouts.length}`)
+  
   if (cutouts.length > 0) {
     const allCutouts = cutouts.length === 1 ? cutouts[0] : union(...cutouts)
     board = subtract(board, allCutouts)
+    console.log('Board with cutouts generated successfully')
+  } else {
+    console.warn('No cutouts generated - board will be a plain rectangle')
   }
   
   // TODO: Add labels (embossed/engraved text)
@@ -149,19 +173,36 @@ export async function generateSTL(igs: IGS): Promise<ArrayBuffer> {
     // Serialize to STL (binary format)
     const rawData = serializeSTL({ binary: true }, model)
     
-    // Handle the return value
+    // Handle the return value - JSCAD returns an array of data chunks
     if (Array.isArray(rawData) && rawData.length > 0) {
-      const data = rawData[0]
-      if (data instanceof ArrayBuffer) {
-        return data
-      } else if (typeof data === 'string') {
-        // Convert string to ArrayBuffer if needed
+      // For binary STL, concatenate all array buffer chunks
+      if (rawData[0] instanceof ArrayBuffer) {
+        // If there's only one chunk, return it
+        if (rawData.length === 1) {
+          return rawData[0]
+        }
+        
+        // Multiple chunks - concatenate them
+        const totalLength = rawData.reduce((sum, chunk) => sum + chunk.byteLength, 0)
+        const result = new ArrayBuffer(totalLength)
+        const view = new Uint8Array(result)
+        let offset = 0
+        
+        for (const chunk of rawData) {
+          view.set(new Uint8Array(chunk), offset)
+          offset += chunk.byteLength
+        }
+        
+        return result
+      } else if (typeof rawData[0] === 'string') {
+        // ASCII STL - join strings and convert to ArrayBuffer
+        const stlString = rawData.join('')
         const encoder = new TextEncoder()
-        return encoder.encode(data).buffer
+        return encoder.encode(stlString).buffer
       }
     }
     
-    throw new Error('Failed to serialize STL data')
+    throw new Error('Failed to serialize STL data - no data returned')
   } catch (error) {
     console.error('Error generating STL:', error)
     throw new Error(`STL generation failed: ${error}`)

@@ -48,7 +48,7 @@ export interface IGS {
   }
   components: PlacedComponent[]
   labels: Label[]
-  features: any[]
+  features: object[]
 }
 
 export function generateIGS(
@@ -71,58 +71,45 @@ export function generateIGS(
     
     return {
       id: comp.id,
-      componentId: comp.componentId,
       type: comp.part_type,
+      value: `${comp.value}${comp.value_unit}`,
       position: {
         x: comp.position[0],
-        y: comp.position[2], // Z in 3D space is Y in 2D board space
-        rotation: comp.rotation[1] // Y rotation in radians
+        z: comp.position[2]  // Z in 3D space
       },
-      body: {
-        shape: comp.body_shape,
+      rotation: comp.rotation[1], // Y rotation in degrees
+      recess: {
+        shape: comp.body_shape === 'cylinder' ? 'cylinder' : 
+               comp.body_shape === 'coil' ? 'toroidal' : 'rectangular',
         dimensions: {
-          diameter: comp.dimensions.diameter,
-          length: comp.dimensions.length,
           width: comp.dimensions.width,
-          height: comp.dimensions.height,
+          depth: comp.dimensions.length || comp.dimensions.height,
+          diameter: comp.dimensions.diameter,
           outerDiameter: comp.dimensions.outer_diameter,
           innerDiameter: comp.dimensions.inner_diameter
-        }
-      },
-      recess: {
-        shape: comp.body_shape === 'cylinder' ? 'cylindrical' : 
-               comp.body_shape === 'coil' ? 'ring' : 'rectangular',
-        depth: recessDepth,
-        clearance: 0.5 // 0.5mm clearance for easy fit
+        },
+        depth: recessDepth
       },
       leadHoles: leadHoles.map(hole => ({
-        x: hole.x,
-        y: hole.z,
-        diameter: hole.diameter,
-        plated: false
-      })),
-      metadata: {
-        brand: comp.brand,
-        series: comp.series,
-        value: comp.value,
-        valueUnit: comp.value_unit,
-        partNumber: comp.componentId
-      }
+        position: {
+          x: hole.x,
+          z: hole.z
+        },
+        diameter: hole.diameter
+      }))
     }
   })
   
   // Generate labels for components
   const labels: Label[] = components.map(comp => ({
-    id: `label-${comp.id}`,
     text: `${comp.value}${comp.value_unit}`,
-    x: comp.position[0],
-    y: comp.position[2],
-    z: board.thickness + 0.5, // On top of board
-    fontSize: 3,
-    fontDepth: 0.3, // Embossed
-    rotation: comp.rotation[1],
-    side: 'top',
-    type: 'component-value'
+    position: {
+      x: comp.position[0],
+      z: comp.position[2]
+    },
+    size: 3,
+    depth: 0.5,
+    type: 'embossed'
   }))
   
   // Generate mounting holes if enabled
@@ -138,19 +125,18 @@ export function generateIGS(
     
     positions.forEach(pos => {
       mountingHoles.push({
-        x: pos.x - board.width / 2, // Convert to centered coordinates
-        y: pos.y - board.height / 2,
+        position: {
+          x: pos.x - board.width / 2, // Convert to centered coordinates
+          z: pos.y - board.height / 2
+        },
         diameter: board.mountingHoles.diameter,
-        countersink: true,
-        countersinkDiameter: board.mountingHoles.diameter * 2,
-        countersinkAngle: 82
+        countersink: true
       })
     })
   }
   
   // Create the IGS
   const igs: IGS = {
-    version: '1.0.0',
     board: {
       width: board.width,
       height: board.height, 
@@ -160,13 +146,7 @@ export function generateIGS(
     },
     components: placedComponents,
     labels,
-    features: [], // Additional features can be added here
-    validation: {
-      minimumWallThickness: 2,
-      minimumHoleDiameter: 0.5,
-      maximumRecessDepth: 3,
-      edgeClearance: 2
-    }
+    features: [] // Additional features can be added here
   }
   
   return igs
@@ -188,17 +168,18 @@ export function validateIGS(igs: IGS): { valid: boolean; errors: string[] } {
     
     // Check if component is within board bounds
     if (Math.abs(comp.position.x) > halfWidth - 5 ||
-        Math.abs(comp.position.y) > halfHeight - 5) {
+        Math.abs(comp.position.z) > halfHeight - 5) {
       errors.push(`Component ${comp.id} is too close to board edge`)
     }
     
     // Check lead holes
     comp.leadHoles.forEach(hole => {
-      const holeX = comp.position.x + hole.x * Math.cos(comp.position.rotation) - hole.y * Math.sin(comp.position.rotation)
-      const holeY = comp.position.y + hole.x * Math.sin(comp.position.rotation) + hole.y * Math.cos(comp.position.rotation)
+      const rotationRad = comp.rotation * Math.PI / 180
+      const holeX = comp.position.x + hole.position.x * Math.cos(rotationRad) - hole.position.z * Math.sin(rotationRad)
+      const holeZ = comp.position.z + hole.position.x * Math.sin(rotationRad) + hole.position.z * Math.cos(rotationRad)
       
       if (Math.abs(holeX) > halfWidth - 2 ||
-          Math.abs(holeY) > halfHeight - 2) {
+          Math.abs(holeZ) > halfHeight - 2) {
         errors.push(`Lead hole for component ${comp.id} is too close to board edge`)
       }
     })
@@ -216,7 +197,7 @@ export function validateIGS(igs: IGS): { valid: boolean; errors: string[] } {
       const comp2 = igs.components[j]
       
       const dx = comp1.position.x - comp2.position.x
-      const dy = comp1.position.y - comp2.position.y
+      const dy = comp1.position.z - comp2.position.z
       const distance = Math.sqrt(dx * dx + dy * dy)
       
       // Simple collision check (can be improved)

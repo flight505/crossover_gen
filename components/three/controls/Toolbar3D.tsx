@@ -12,7 +12,7 @@ import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { useDesignerStore } from '@/lib/store/designer-store'
 import { generateIGS, validateIGS } from '@/lib/igs-generator'
-import { generateJSCADModel, generateSTL } from '@/lib/jscad-generator'
+import { generateSTL } from '@/lib/jscad-generator'
 
 export function Toolbar3D() {
   const {
@@ -42,11 +42,8 @@ export function Toolbar3D() {
         return
       }
       
-      // Generate JSCAD model from IGS
-      const jscadModel = generateJSCADModel(igs)
-      
-      // Generate STL from JSCAD model
-      const stlData = await generateSTL(jscadModel)
+      // Generate STL from IGS (internally creates JSCAD model)
+      const stlData = await generateSTL(igs)
       
       // Download the STL
       const blob = new Blob([stlData], { type: 'model/stl' })
