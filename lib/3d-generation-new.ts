@@ -55,13 +55,26 @@ export async function generateSTL({
   
   // Serialize to STL
   const rawData = serializeSTL({ binary: true }, model)
-  return rawData[0] as ArrayBuffer
+  
+  // Handle the return value which could be ArrayBuffer[] or string[]
+  if (Array.isArray(rawData) && rawData.length > 0) {
+    const data = rawData[0]
+    if (data instanceof ArrayBuffer) {
+      return data
+    } else if (typeof data === 'string') {
+      // Convert string to ArrayBuffer
+      const encoder = new TextEncoder()
+      return encoder.encode(data).buffer
+    }
+  }
+  
+  throw new Error('Failed to generate STL data')
 }
 
 /**
  * Generate 3D model from board and enriched components
  */
-function generate3DModel(board: Board3DSettings, components: Component3DData[]): JscadGeometry {
+export function generate3DModel(board: Board3DSettings, components: Component3DData[]): JscadGeometry {
   // Create base board
   let baseBoard = cuboid({
     size: [board.width, board.height, board.thickness]
@@ -84,7 +97,7 @@ function generate3DModel(board: Board3DSettings, components: Component3DData[]):
     
     positions.forEach(([x, y]) => {
       const hole = cylinder({
-        radius: board.mountingHoles.diameter / 2,
+        radius: board.mountingHoles!.diameter / 2,
         height: board.thickness + 2,
         segments: 32
       })

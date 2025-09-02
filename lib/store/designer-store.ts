@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { checkCollision, isWithinBounds, findNearestValidPosition } from '@/lib/collision-detection'
 
 export interface Component3D {
   id: string
@@ -165,11 +166,44 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   },
   
   moveComponent: (id, position) => {
-    set((state) => ({
-      components: state.components.map(c =>
-        c.id === id ? { ...c, position } : c
+    const state = get()
+    const component = state.components.find(c => c.id === id)
+    if (!component) return
+    
+    // Create test component with new position
+    const testComponent = { ...component, position }
+    const otherComponents = state.components.filter(c => c.id !== id)
+    
+    // Check for collisions
+    const hasCollision = checkCollision(testComponent, otherComponents)
+    const withinBounds = isWithinBounds(testComponent, state.board.width, state.board.height)
+    
+    if (hasCollision || !withinBounds) {
+      // Try to find nearest valid position
+      const validPosition = findNearestValidPosition(
+        testComponent,
+        otherComponents,
+        state.board.width,
+        state.board.height,
+        state.gridSize
       )
-    }))
+      
+      if (validPosition) {
+        set((state) => ({
+          components: state.components.map(c =>
+            c.id === id ? { ...c, position: validPosition } : c
+          )
+        }))
+      }
+      // If no valid position found, don't move
+    } else {
+      // No collision, proceed with move
+      set((state) => ({
+        components: state.components.map(c =>
+          c.id === id ? { ...c, position } : c
+        )
+      }))
+    }
   },
   
   rotateComponent: (id, rotation) => {

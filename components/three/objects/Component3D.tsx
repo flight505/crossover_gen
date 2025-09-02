@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Mesh } from 'three'
+import { Group } from 'three'
 import { Box, Cylinder, Torus, Text } from '@react-three/drei'
 import { useDesignerStore } from '@/lib/store/designer-store'
 
@@ -34,7 +34,7 @@ const COMPONENT_COLORS = {
 }
 
 export function Component3D(props: Component3DProps) {
-  const meshRef = useRef<Mesh>(null)
+  const meshRef = useRef<Group>(null)
   const [hovered, setHovered] = useState(false)
   const { selectComponent } = useDesignerStore()
   
@@ -118,7 +118,7 @@ export function Component3D(props: Component3DProps) {
     <group
       position={position}
       rotation={rotation}
-      ref={meshRef as React.Ref<THREE.Group>}
+      ref={meshRef}
       onClick={(e) => {
         e.stopPropagation()
         selectComponent(id, e.nativeEvent.shiftKey)

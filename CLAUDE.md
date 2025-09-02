@@ -39,37 +39,36 @@ See DATA_CONTRACT.md for complete field specifications.
 
 ## Current Status & Known Issues
 
-### Working Features
-- Basic UI structure with header, sidebar, canvas, and properties panel
-- Component library displays all 62 components from JSON
-- Search functionality in component library
-- Tab-based filtering (Capacitors, Resistors, Inductors)
-- Basic canvas with PCB board visualization
-- Component cards show dimensions and specifications
+### Working Features (3D-First Implementation)
+- **3D Scene with React Three Fiber** - Full 3D environment with board and components
+- **Component Library** - All 89 components from enriched JSON data
+- **Drag & Drop System** - Components draggable using TransformControls
+- **Component Visualization** - 3D meshes with proper dimensions and labels
+- **Collision Detection** - Real-time collision checking with visual warnings
+- **Board Preview Mode** - Toggle between Design View and Preview Board
+- **STL Export** - Binary STL generation via OpenJSCAD
+- **Keyboard Controls** - Delete, R (rotate), arrows (move), Ctrl+A (select all)
+- **Grid System** - Snap-to-grid functionality with configurable grid size
+- **Label System** - High-contrast labels (black text with white outline)
+- **Lead Holes** - Visual indicators for component lead positions
+- **Save/Load** - Project persistence with JSON format
+- **Auto-save** - LocalStorage backup every 30 seconds
 
 ### Recently Fixed Issues ✅
-1. **Drag & Drop Fixed** - Components can now be dragged from library to canvas
-2. **ScrollArea Fixed** - Component list now scrolls properly with height constraint
-3. **File Operations Working** - New, Save, Load buttons are functional
-4. **Grid System Added** - Canvas has 1mm/5mm/10mm grid with snap-to-grid
-5. **Keyboard Shortcuts Added** - Delete, R (rotate), Escape, Ctrl+A
-6. **Board Configuration Added** - Dynamic board dimensions with collapsible config panel
-7. **Zoom & Pan Added** - Mouse wheel zoom (10%-500%) with pan controls and reset button
-8. **Collision Detection Added** - Components cannot overlap, with visual warning feedback
-9. **3D Generation Added** - OpenJSCAD integration for 3D model generation with component recesses
-10. **STL Export Working** - Direct STL file download from generated 3D models
-11. **Demo Layout Added** - Default example crossover with 6 components pre-placed
-12. **Load Example Button** - Quick demo loading in toolbar
-13. **Component Dimensions** - Shows dimensions when selected (width x height in mm)
-14. **Lead Exit Points** - Visual dots showing lead hole positions
-15. **Arrow Key Movement** - Move components with arrow keys (1mm, Shift for 5mm)
-16. **Undo/Redo System** - Ctrl+Z/Ctrl+Y for undo/redo operations
-17. **Visual Alignment Guides** - Green snap lines when dragging components align
+1. **Component Dragging** - TransformControls working, constrained to XZ plane
+2. **Label Visibility** - Black text with white outline for contrast
+3. **Grid Flickering** - Fixed with Y-axis offset (-0.01)
+4. **Collision System** - Components turn red and show warning when colliding
+5. **Board Preview** - Toggle button switches between design and preview modes
+6. **Keyboard Shortcuts** - Full keyboard support implemented
+7. **Component Selection** - Click to select with visual feedback
 
 ### Remaining Issues to Fix
-1. **Multi-select** - Cannot select multiple components yet
-2. **Hover Tooltips** - No component specifications on hover
-3. **Ghost Preview** - No preview while dragging from library
+1. **Multi-select Box** - Drag rectangle to select multiple components
+2. **Properties Panel** - Numerical position/rotation editing
+3. **Undo/Redo System** - Ctrl+Z/Y for design changes
+4. **Wire Routing Tools** - Manual hole placement and channel tools
+5. **Auto-Layout** - One-click arrangement respecting clearances
 
 ## Implementation Plan & Progress
 
