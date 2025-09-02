@@ -9,6 +9,9 @@ export interface LeadConfig {
   spacing: number
   diameter: number
   configuration: 'radial' | 'axial' | 'inline'
+  countersink?: boolean
+  countersinkDiameter?: number // Default: lead diameter * 1.8
+  countersinkAngle?: number // Default: 82 degrees
 }
 
 export interface CrossoverComponent {

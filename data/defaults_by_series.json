@@ -1,0 +1,40 @@
+{
+  "Jantzen Audio": {
+    "Superior Z-Cap": {
+      "end_inset_mm": 3.0
+    },
+    "Alumen Z-Cap": {
+      "end_inset_mm": 2.5
+    },
+    "Cross Coil": {
+      "lead_pattern": "adjacent"
+    },
+    "Wax Coil": {
+      "lead_pattern": "adjacent"
+    }
+  },
+  "AUDYN": {
+    "True Copper Cap": {
+      "end_inset_mm": 2.5
+    },
+    "CAP PLUS": {
+      "end_inset_mm": 2.5
+    }
+  },
+  "Mundorf": {
+    "MResist": {
+      "end_inset_mm": 2.0
+    },
+    "MOX": {
+      "end_inset_mm": 2.0
+    }
+  },
+  "Intertechnik": {
+    "_default_resistor": {
+      "end_inset_mm": 2.0
+    },
+    "_default_coil": {
+      "lead_pattern": "opposite"
+    }
+  }
+}
