@@ -68,9 +68,11 @@ export function DraggableComponent3D(props: DraggableComponent3DProps) {
     setHasCollision(collision || !withinBounds)
   }, [position, components, id, props, board])
   
+  const isSelected = selectedIds.includes(id)
+  
   const color = hasCollision ? '#ff0000' : COMPONENT_COLORS[part_type]
-  const emissive = hasCollision ? '#ff0000' : selected ? color : hovered ? '#666666' : '#000000'
-  const emissiveIntensity = hasCollision ? 0.5 : selected ? 0.3 : hovered ? 0.1 : 0
+  const emissive = hasCollision ? '#ff0000' : isSelected ? color : hovered ? '#666666' : '#000000'
+  const emissiveIntensity = hasCollision ? 0.5 : isSelected ? 0.4 : hovered ? 0.1 : 0
   
   // Snap position to grid if enabled
   const snapPosition = (pos: [number, number, number]): [number, number, number] => {
@@ -155,8 +157,6 @@ export function DraggableComponent3D(props: DraggableComponent3DProps) {
       )
     }
   }
-  
-  const isSelected = selectedIds.includes(id)
   
   return (
     <>

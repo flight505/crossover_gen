@@ -2,11 +2,12 @@
 
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Grid, Environment, PerspectiveCamera } from '@react-three/drei'
-import { Suspense, useState } from 'react'
+import { Suspense, useState, useRef } from 'react'
 import { Board3D } from './objects/Board3D'
 import { DraggableComponent3D } from './objects/DraggableComponent3D'
 import { Preview3DBoard } from './Preview3DBoard'
 import { useDesignerStore } from '@/lib/store/designer-store'
+import type { OrbitControls as OrbitControlsType } from 'three-stdlib'
 
 export function Scene3D() {
   const { 
@@ -15,10 +16,12 @@ export function Scene3D() {
     showGrid, 
     gridSize,
     cameraPosition,
-    cameraTarget
+    cameraTarget,
+    deselectAll
   } = useDesignerStore()
   
   const [showPreview, setShowPreview] = useState(false)
+  const controlsRef = useRef<OrbitControlsType>(null)
 
   return (
     <div className="w-full h-full relative">
@@ -34,7 +37,13 @@ export function Scene3D() {
         {showPreview ? '🎨 Design View' : '👁️ Preview Board'}
       </button>
       
-      <Canvas shadows>
+      <Canvas 
+        shadows
+        onPointerMissed={() => {
+          // Deselect all when clicking empty space
+          deselectAll()
+        }}
+      >
         <PerspectiveCamera
           makeDefault
           position={cameraPosition}
@@ -42,6 +51,7 @@ export function Scene3D() {
         />
         
         <OrbitControls 
+          ref={controlsRef}
           target={cameraTarget}
           enablePan={true}
           enableZoom={true}

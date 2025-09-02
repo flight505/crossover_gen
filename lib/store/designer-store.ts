@@ -42,12 +42,21 @@ export interface BoardSettings {
   }
 }
 
+interface HistoryState {
+  board: BoardSettings
+  components: Component3D[]
+}
+
 interface DesignerState {
   // Board settings
   board: BoardSettings
   
   // Components on board
   components: Component3D[]
+  
+  // History for undo/redo
+  history: HistoryState[]
+  historyIndex: number
   
   // Selection
   selectedIds: string[]
@@ -90,6 +99,11 @@ interface DesignerState {
   loadProject: (data: { board?: BoardSettings; components?: Component3D[]; cameraPosition?: [number, number, number]; cameraTarget?: [number, number, number] }) => void
   clearProject: () => void
   exportProject: () => { board: BoardSettings; components: Component3D[]; cameraPosition: [number, number, number]; cameraTarget: [number, number, number] }
+  
+  // History actions
+  undo: () => void
+  redo: () => void
+  saveToHistory: () => void
 }
 
 export const useDesignerStore = create<DesignerState>((set, get) => ({
@@ -110,6 +124,10 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   components: [],
   selectedIds: [],
   
+  // History (initialize with current state)
+  history: [],
+  historyIndex: -1,
+  
   // Default camera position
   cameraPosition: [150, 150, 150],
   cameraTarget: [0, 0, 0],
@@ -127,6 +145,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     set((state) => ({
       components: [...state.components, { ...component, id } as Component3D]
     }))
+    get().saveToHistory()
   },
   
   removeComponent: (id) => {
@@ -134,6 +153,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       components: state.components.filter(c => c.id !== id),
       selectedIds: state.selectedIds.filter(sid => sid !== id)
     }))
+    get().saveToHistory()
   },
   
   updateComponent: (id, updates) => {
@@ -194,6 +214,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
             c.id === id ? { ...c, position: validPosition } : c
           )
         }))
+        get().saveToHistory()
       }
       // If no valid position found, don't move
     } else {
@@ -203,6 +224,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
           c.id === id ? { ...c, position } : c
         )
       }))
+      get().saveToHistory()
     }
   },
   
@@ -212,6 +234,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
         c.id === id ? { ...c, rotation } : c
       )
     }))
+    get().saveToHistory()
   },
   
   // Board actions
@@ -290,6 +313,52 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       })),
       cameraPosition: state.cameraPosition,
       cameraTarget: state.cameraTarget
+    }
+  },
+  
+  // History management
+  saveToHistory: () => {
+    const state = get()
+    const newHistoryState: HistoryState = {
+      board: { ...state.board },
+      components: [...state.components]
+    }
+    
+    // Remove any states after current index (for when we undo then make new changes)
+    const history = state.history.slice(0, state.historyIndex + 1)
+    
+    // Add new state and limit history to 50 states
+    const newHistory = [...history, newHistoryState].slice(-50)
+    
+    set({
+      history: newHistory,
+      historyIndex: newHistory.length - 1
+    })
+  },
+  
+  undo: () => {
+    const state = get()
+    if (state.historyIndex > 0) {
+      const previousState = state.history[state.historyIndex - 1]
+      set({
+        board: { ...previousState.board },
+        components: [...previousState.components],
+        historyIndex: state.historyIndex - 1,
+        selectedIds: []
+      })
+    }
+  },
+  
+  redo: () => {
+    const state = get()
+    if (state.historyIndex < state.history.length - 1) {
+      const nextState = state.history[state.historyIndex + 1]
+      set({
+        board: { ...nextState.board },
+        components: [...nextState.components],
+        historyIndex: state.historyIndex + 1,
+        selectedIds: []
+      })
     }
   }
 }))

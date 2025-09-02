@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { Scene3D } from '@/components/three/Scene3D'
 import { ComponentLibrary3D } from '@/components/three/ComponentLibrary3D'
 import { Toolbar3D } from '@/components/three/controls/Toolbar3D'
+import { PropertiesPanel } from '@/components/PropertiesPanel'
 import { useDesignerStore } from '@/lib/store/designer-store'
 
 export default function DesignerPage() {
@@ -14,6 +15,8 @@ export default function DesignerPage() {
   const rotateComponent = useDesignerStore((state) => state.rotateComponent)
   const deselectAll = useDesignerStore((state) => state.deselectAll)
   const selectComponent = useDesignerStore((state) => state.selectComponent)
+  const undo = useDesignerStore((state) => state.undo)
+  const redo = useDesignerStore((state) => state.redo)
   
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -75,6 +78,18 @@ export default function DesignerPage() {
         components.forEach(c => selectComponent(c.id, true))
       }
       
+      // Undo
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        undo()
+      }
+      
+      // Redo
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault()
+        redo()
+      }
+      
       // Escape to deselect
       if (e.key === 'Escape') {
         deselectAll()
@@ -83,7 +98,7 @@ export default function DesignerPage() {
     
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedIds, components, removeComponent, moveComponent, rotateComponent, deselectAll, selectComponent])
+  }, [selectedIds, components, removeComponent, moveComponent, rotateComponent, deselectAll, selectComponent, undo, redo])
   
   return (
     <div className="h-screen flex flex-col bg-gray-50">
@@ -98,6 +113,11 @@ export default function DesignerPage() {
         {/* 3D Canvas */}
         <div className="flex-1 relative">
           <Scene3D />
+        </div>
+        
+        {/* Properties Panel */}
+        <div className="w-80 p-4 bg-white border-l overflow-y-auto">
+          <PropertiesPanel />
         </div>
       </div>
     </div>
