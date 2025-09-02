@@ -44,6 +44,29 @@ export interface Component3DData {
 /**
  * Generate STL from board and components using enriched data
  */
+/**
+ * Get mounting hole positions based on board configuration
+ */
+export function getMountingHolePositions(board: Board3DSettings): Array<{ x: number; z: number }> {
+  const holes: Array<{ x: number; z: number }> = []
+  
+  if (!board.mountingHoles?.enabled) return holes
+  
+  const offset = 5 // 5mm from edge
+  
+  if (board.mountingHoles.positions === 'corners') {
+    // Corner positions
+    holes.push(
+      { x: -board.width/2 + offset, z: -board.height/2 + offset },
+      { x: board.width/2 - offset, z: -board.height/2 + offset },
+      { x: -board.width/2 + offset, z: board.height/2 - offset },
+      { x: board.width/2 - offset, z: board.height/2 - offset }
+    )
+  }
+  
+  return holes
+}
+
 export async function generateSTL({
   board,
   components

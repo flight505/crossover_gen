@@ -11,7 +11,8 @@ import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { useDesignerStore } from '@/lib/store/designer-store'
-import { generateSTL } from '@/lib/3d-generation-new'
+import { generateIGS, validateIGS } from '@/lib/igs-generator'
+import { generateJSCADModel, generateSTL } from '@/lib/jscad-generator'
 
 export function Toolbar3D() {
   const {
@@ -30,7 +31,24 @@ export function Toolbar3D() {
   
   const handleExportSTL = async () => {
     try {
-      const stlData = await generateSTL({ board, components })
+      // Generate IGS from current state
+      const igs = generateIGS(board, components)
+      
+      // Validate before generating STL
+      const validation = validateIGS(igs)
+      if (!validation.valid) {
+        console.error('Validation errors:', validation.errors)
+        alert('Cannot export STL:\n' + validation.errors.join('\n'))
+        return
+      }
+      
+      // Generate JSCAD model from IGS
+      const jscadModel = generateJSCADModel(igs)
+      
+      // Generate STL from JSCAD model
+      const stlData = await generateSTL(jscadModel)
+      
+      // Download the STL
       const blob = new Blob([stlData], { type: 'model/stl' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -40,6 +58,7 @@ export function Toolbar3D() {
       URL.revokeObjectURL(url)
     } catch (error) {
       console.error('Error generating STL:', error)
+      alert('Error generating STL. Check console for details.')
     }
   }
   

@@ -5,6 +5,8 @@ import { Group } from 'three'
 import { Box, Cylinder, Torus, Text, TransformControls } from '@react-three/drei'
 import { useDesignerStore } from '@/lib/store/designer-store'
 import { checkCollision, isWithinBounds } from '@/lib/collision-detection'
+import { calculateLeadHolePositions } from '@/lib/component-data-loader'
+import type { Component3D } from '@/lib/store/designer-store'
 
 interface DraggableComponent3DProps {
   id: string
@@ -102,7 +104,7 @@ export function DraggableComponent3D(props: DraggableComponent3DProps) {
   const renderBody = () => {
     if (body_shape === 'cylinder') {
       const radius = (dimensions.diameter || 10) / 2
-      const height = dimensions.length || dimensions.height || 20
+      const height = dimensions.length || 20
       
       return (
         <Cylinder
@@ -244,39 +246,21 @@ export function DraggableComponent3D(props: DraggableComponent3DProps) {
 }
 
 function LeadHoles(props: DraggableComponent3DProps) {
-  const { body_shape, dimensions } = props
+  // Calculate actual lead hole positions based on component data
+  const holes = calculateLeadHolePositions(props as Component3D)
   
-  if (body_shape === 'cylinder') {
-    // Axial leads at ends
-    const length = dimensions.length || 20
-    return (
-      <>
-        <mesh position={[-length/2 - 2, -3, 0]}>
-          <cylinderGeometry args={[0.5, 0.5, 6]} />
-          <meshStandardMaterial color="#FFD700" emissive="#FFD700" emissiveIntensity={0.3} />
+  return (
+    <>
+      {holes.map((hole, index) => (
+        <mesh key={index} position={[hole.x, -3, hole.z]}>
+          <cylinderGeometry args={[hole.diameter / 2, hole.diameter / 2, 6]} />
+          <meshStandardMaterial 
+            color="#FFD700" 
+            emissive="#FFD700" 
+            emissiveIntensity={0.3} 
+          />
         </mesh>
-        <mesh position={[length/2 + 2, -3, 0]}>
-          <cylinderGeometry args={[0.5, 0.5, 6]} />
-          <meshStandardMaterial color="#FFD700" emissive="#FFD700" emissiveIntensity={0.3} />
-        </mesh>
-      </>
-    )
-  } else if (body_shape === 'coil') {
-    // Leads at inner edge
-    const innerRadius = (dimensions.inner_diameter || 15) / 2
-    return (
-      <>
-        <mesh position={[innerRadius * 0.9, -3, -innerRadius * 0.3]}>
-          <cylinderGeometry args={[0.5, 0.5, 6]} />
-          <meshStandardMaterial color="#FFD700" emissive="#FFD700" emissiveIntensity={0.3} />
-        </mesh>
-        <mesh position={[innerRadius * 0.9, -3, innerRadius * 0.3]}>
-          <cylinderGeometry args={[0.5, 0.5, 6]} />
-          <meshStandardMaterial color="#FFD700" emissive="#FFD700" emissiveIntensity={0.3} />
-        </mesh>
-      </>
-    )
-  }
-  
-  return null
+      ))}
+    </>
+  )
 }

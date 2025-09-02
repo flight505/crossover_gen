@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useDesignerStore } from '@/lib/store/designer-store'
-import componentsData from '@/data/crossover_parts_verified_enriched.json'
+import { getAllComponents, createComponent3D, type EnrichedComponentData } from '@/lib/component-data-loader'
 
 const COMPONENT_COLORS = {
   capacitor: 'bg-red-100 border-red-300',
@@ -19,6 +19,7 @@ export function ComponentLibrary3D() {
   const [selectedTab, setSelectedTab] = useState('all')
   const addComponent = useDesignerStore((state) => state.addComponent)
   
+  const componentsData = getAllComponents()
   const filteredComponents = componentsData.filter((comp) => {
     const matchesSearch = searchTerm === '' || 
       comp.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -30,37 +31,13 @@ export function ComponentLibrary3D() {
     return matchesSearch && matchesTab
   })
   
-  const handleAddComponent = (comp: typeof componentsData[0]) => {
+  const handleAddComponent = (comp: EnrichedComponentData) => {
     // Add component at board center with some random offset
     const offsetX = (Math.random() - 0.5) * 20
     const offsetZ = (Math.random() - 0.5) * 20
     
-    addComponent({
-      componentId: `${comp.brand}-${comp.series}-${comp.value}${comp.value_unit}`,
-      position: [offsetX, 5, offsetZ], // 5mm above board
-      rotation: [0, 0, 0],
-      selected: false,
-      brand: comp.brand,
-      series: comp.series,
-      part_type: comp.part_type as 'capacitor' | 'resistor' | 'inductor',
-      value: comp.value,
-      value_unit: comp.value_unit,
-      body_shape: comp.body_shape as 'cylinder' | 'coil' | 'rectangular',
-      dimensions: {
-        diameter: comp.body_diameter_mm || undefined,
-        length: comp.body_length_mm || undefined,
-        width: comp.body_width_mm || undefined,
-        height: comp.body_height_mm || comp.height_mm || undefined,
-        depth: comp.body_length_mm || undefined,
-        outer_diameter: comp.outer_diameter_mm || undefined,
-        inner_diameter: comp.inner_diameter_mm || undefined,
-      },
-      lead_configuration: comp.lead_configuration as 'axial' | 'radial',
-      suggested_hole_diameter_mm: comp.suggested_hole_diameter_mm,
-      end_inset_mm: comp.end_inset_mm,
-      lead_pattern: comp.lead_pattern as 'adjacent' | 'opposite' | undefined,
-      lead_spacing_mm: comp.lead_spacing_mm,
-    })
+    const component3D = createComponent3D(comp, [offsetX, 5, offsetZ])
+    addComponent(component3D)
   }
   
   return (
