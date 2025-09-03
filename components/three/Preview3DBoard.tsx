@@ -174,7 +174,13 @@ export function Preview3DBoard({ showPreview }: Preview3DBoardProps) {
       {/* Mounting holes if enabled */}
       {board.mountingHoles?.enabled && (
         <>
-          {getMountingHolePositions(board).map((pos, i) => (
+          {getMountingHolePositions({
+            ...board,
+            mountingHoles: {
+              ...board.mountingHoles,
+              positions: board.mountingHoles?.positions || 'corners'
+            }
+          }).map((pos, i) => (
             <Cylinder
               key={`mounting-${i}`}
               args={[

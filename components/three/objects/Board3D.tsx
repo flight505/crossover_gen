@@ -12,7 +12,12 @@ interface Board3DProps {
   mountingHoles?: {
     enabled: boolean
     diameter: number
-    positions: 'corners' | 'custom'
+    positions?: 'corners' | 'custom'
+  }
+  zipTieSlots?: {
+    enabled: boolean
+    width: number
+    spacing: number
   }
 }
 

@@ -82,8 +82,9 @@ export function generateIGS(
         shape: comp.body_shape === 'cylinder' ? 'cylinder' : 
                comp.body_shape === 'coil' ? 'toroidal' : 'rectangular',
         dimensions: {
-          width: comp.dimensions.width,
-          depth: comp.dimensions.length || comp.dimensions.height,
+          // For cylindrical components, width is the body length
+          width: comp.dimensions.length || comp.dimensions.width,
+          depth: comp.dimensions.height || comp.dimensions.depth,
           diameter: comp.dimensions.diameter,
           outerDiameter: comp.dimensions.outer_diameter,
           innerDiameter: comp.dimensions.inner_diameter

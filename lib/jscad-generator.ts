@@ -3,7 +3,7 @@ import { serialize as serializeSTL } from '@jscad/stl-serializer'
 import { IGS } from '@/lib/igs-generator'
 
 const { cuboid, cylinder } = primitives
-const { translate, rotateZ, rotateY } = transforms
+const { translate, rotateZ } = transforms
 const { subtract, union } = booleans
 
 type JscadGeometry = object // JSCAD geometry type
@@ -12,17 +12,6 @@ type JscadGeometry = object // JSCAD geometry type
  * Generate 3D model from IGS
  */
 export function generateJSCADModel(igs: IGS): JscadGeometry {
-  console.log('Generating JSCAD model with IGS:', {
-    board: igs.board,
-    componentCount: igs.components.length,
-    components: igs.components.map(c => ({
-      id: c.id,
-      shape: c.recess.shape,
-      dimensions: c.recess.dimensions,
-      position: c.position
-    }))
-  })
-  
   // Create base board centered at origin
   // In JSCAD: X = width, Y = depth, Z = thickness (vertical)
   let board = cuboid({
@@ -37,22 +26,22 @@ export function generateJSCADModel(igs: IGS): JscadGeometry {
     let recess: JscadGeometry | null = null
     
     if (comp.recess.shape === 'cylinder') {
-      // Cylindrical recess for capacitors/resistors
+      // Cylindrical recess for capacitors/resistors - horizontal orientation
       const diameter = comp.recess.dimensions.diameter || 10
       const radius = diameter / 2 + 0.5 // 0.5mm clearance
-      const length = comp.recess.dimensions.depth || comp.recess.dimensions.width || 20
+      // Use actual body length for axial components
+      const length = comp.recess.dimensions.width || comp.recess.dimensions.depth || 20
       
-      console.log(`Creating cylindrical recess: diameter=${diameter}mm, length=${length}mm, depth=${comp.recess.depth}mm`)
-      
-      // Create horizontal cylinder
+      // Create cylinder along Y-axis (length direction)
       recess = cylinder({
         radius: radius,
         height: length,
         segments: 32
       })
       
-      // Rotate to horizontal and position at correct depth
-      recess = rotateY(Math.PI / 2, recess)
+      // Rotate 90° around Z-axis to make it horizontal (along Y-axis)
+      recess = rotateZ(Math.PI / 2, recess)
+      // Position at correct depth from top of board
       recess = translate([0, 0, igs.board.thickness / 2 - comp.recess.depth / 2], recess)
       
     } else if (comp.recess.shape === 'toroidal') {
@@ -146,14 +135,9 @@ export function generateJSCADModel(igs: IGS): JscadGeometry {
   })
   
   // Subtract all cutouts from the board
-  console.log(`Total cutouts to subtract: ${cutouts.length}`)
-  
   if (cutouts.length > 0) {
     const allCutouts = cutouts.length === 1 ? cutouts[0] : union(...cutouts)
     board = subtract(board, allCutouts)
-    console.log('Board with cutouts generated successfully')
-  } else {
-    console.warn('No cutouts generated - board will be a plain rectangle')
   }
   
   // TODO: Add labels (embossed/engraved text)

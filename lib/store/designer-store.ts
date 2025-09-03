@@ -28,6 +28,9 @@ export interface Component3D {
   end_inset_mm?: number
   lead_pattern?: 'adjacent' | 'opposite'
   lead_spacing_mm?: number
+  // Additional customizable properties
+  recessDepth?: number
+  clearance?: number
 }
 
 export interface BoardSettings {
@@ -38,7 +41,12 @@ export interface BoardSettings {
   mountingHoles: {
     enabled: boolean
     diameter: number
-    positions: 'corners' | 'custom'
+    positions?: 'corners' | 'custom'
+  }
+  zipTieSlots?: {
+    enabled: boolean
+    width: number
+    spacing: number
   }
 }
 

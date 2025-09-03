@@ -55,13 +55,14 @@ See DATA_CONTRACT.md for complete field specifications.
 - **Auto-save** - LocalStorage backup every 30 seconds
 
 ### Recently Fixed Issues ✅
-1. **Component Dragging** - TransformControls working, constrained to XZ plane
-2. **Label Visibility** - Black text with white outline for contrast
-3. **Grid Flickering** - Fixed with Y-axis offset (-0.01)
-4. **Collision System** - Components turn red and show warning when colliding
-5. **Board Preview** - Toggle button switches between design and preview modes
-6. **Keyboard Shortcuts** - Full keyboard support implemented
-7. **Component Selection** - Click to select with visual feedback
+1. **STL Export** - Fixed JSCAD serialization array handling, STL files now contain geometry
+2. **Coordinate System** - Fixed Y/Z axis mismatch between Three.js and JSCAD
+3. **Component Recesses** - Proper dimensions from enriched data, correct positioning
+4. **Component Dragging** - TransformControls working, constrained to XZ plane
+5. **Label Visibility** - Black text with white outline for contrast
+6. **Collision System** - Components turn red and show warning when colliding
+7. **Board Preview** - Toggle button switches between design and preview modes
+8. **Keyboard Shortcuts** - Full keyboard support implemented
 
 ### Remaining Issues to Fix
 1. **Multi-select Box** - Drag rectangle to select multiple components

@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { Scene3D } from '@/components/three/Scene3D'
 import { ComponentLibrary3D } from '@/components/three/ComponentLibrary3D'
 import { Toolbar3D } from '@/components/three/controls/Toolbar3D'
-import { PropertiesPanel } from '@/components/PropertiesPanel'
+import { EnhancedPropertiesPanel } from '@/components/EnhancedPropertiesPanel'
 import { useDesignerStore } from '@/lib/store/designer-store'
 
 export default function DesignerPage() {
@@ -116,8 +116,8 @@ export default function DesignerPage() {
         </div>
         
         {/* Properties Panel */}
-        <div className="w-80 p-4 bg-white border-l overflow-y-auto">
-          <PropertiesPanel />
+        <div className="w-96 bg-white border-l overflow-y-auto">
+          <EnhancedPropertiesPanel />
         </div>
       </div>
     </div>

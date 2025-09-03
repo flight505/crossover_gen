@@ -3,7 +3,12 @@
  */
 
 import { PlacedComponent } from '@/types'
-import { BoardDimensions } from './3d-generation'
+
+interface BoardDimensions {
+  width: number
+  height: number
+  thickness: number
+}
 
 const STORAGE_KEY = 'crossover_designer_autosave'
 const STORAGE_VERSION = '1.0'
