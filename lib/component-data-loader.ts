@@ -110,12 +110,14 @@ export function calculateLeadHolePositions(
   
   if (component.lead_configuration === 'axial') {
     // Axial components have leads at both ends
-    const length = component.dimensions.length || 20
+    // For axial components, the length is the actual body length
+    const bodyLength = component.dimensions.length || 20
     const inset = component.end_inset_mm || 2
     
+    // Lead holes are positioned at the ends of the component body, minus the inset
     holes.push(
-      { x: -(length / 2 - inset), z: 0, diameter: holeDiameter },
-      { x: length / 2 - inset, z: 0, diameter: holeDiameter }
+      { x: -(bodyLength / 2 - inset), z: 0, diameter: holeDiameter },
+      { x: bodyLength / 2 - inset, z: 0, diameter: holeDiameter }
     )
   } else if (component.lead_configuration === 'radial') {
     // Radial components (like coils) have different lead patterns

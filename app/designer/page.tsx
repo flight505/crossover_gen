@@ -5,7 +5,10 @@ import { Scene3D } from '@/components/three/Scene3D'
 import { ComponentLibrary3D } from '@/components/three/ComponentLibrary3D'
 import { Toolbar3D } from '@/components/three/controls/Toolbar3D'
 import { EnhancedPropertiesPanel } from '@/components/EnhancedPropertiesPanel'
+import { OperationsPanel } from '@/components/OperationsPanel'
+import { HelpPanel } from '@/components/HelpPanel'
 import { useDesignerStore } from '@/lib/store/designer-store'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export default function DesignerPage() {
   const selectedIds = useDesignerStore((state) => state.selectedIds)
@@ -115,11 +118,25 @@ export default function DesignerPage() {
           <Scene3D />
         </div>
         
-        {/* Properties Panel */}
-        <div className="w-96 bg-white border-l overflow-y-auto">
-          <EnhancedPropertiesPanel />
+        {/* Right Panel - Properties and Operations */}
+        <div className="w-96 bg-white border-l">
+          <Tabs defaultValue="properties" className="h-full">
+            <TabsList className="w-full">
+              <TabsTrigger value="properties" className="flex-1">Properties</TabsTrigger>
+              <TabsTrigger value="operations" className="flex-1">Operations</TabsTrigger>
+            </TabsList>
+            <TabsContent value="properties" className="h-[calc(100%-40px)] overflow-y-auto">
+              <EnhancedPropertiesPanel />
+            </TabsContent>
+            <TabsContent value="operations" className="h-[calc(100%-40px)]">
+              <OperationsPanel />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
+      
+      {/* Help Panel (floating) */}
+      <HelpPanel />
     </div>
   )
 }

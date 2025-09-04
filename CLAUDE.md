@@ -7,8 +7,46 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a web application for designing 3D-printable speaker crossover mounting plates. Users can:
 - Select audio components (capacitors, inductors, resistors) from a library
 - Drag and drop them onto a virtual board
-- Generate a 3D model with recesses and lead holes
+- Generate a 3D model with recesses and lead holes through procedural operations
 - Export STL files for 3D printing
+
+### Architecture: Procedural Generation System
+
+The application uses a **separation of concerns** architecture:
+1. **Placement Phase**: Users place components interactively on the board
+2. **Operations Timeline**: All actions are tracked as procedural operations
+3. **Generation Phase**: Operations are converted to JSCAD script for 3D generation
+4. **Export Phase**: Final geometry is serialized to STL format
+
+This approach provides:
+- Clear separation between UI interaction and geometry generation
+- Ability to toggle/reorder operations
+- Reproducible generation from operation history
+- Easy addition of new operation types (zip-ties, labels, etc.)
+
+## Key Architecture Components
+
+### Operations System
+- **`/lib/operations-manager.ts`** - Manages procedural operations timeline
+  - Tracks all operations with enable/disable state
+  - Supports operation reordering and removal
+  - Serializable for save/load functionality
+  
+- **`/lib/jscad-operations-generator.ts`** - Converts operations to JSCAD script
+  - Generates executable JSCAD code from operations list
+  - Handles all geometry types (recesses, holes, slots, channels)
+  - Proper coordinate transformations for 3D generation
+
+- **`/components/OperationsPanel.tsx`** - UI for operations timeline
+  - Visual list with checkboxes for enable/disable
+  - Reorder operations with up/down buttons
+  - Add custom operations (zip-ties, labels, wire channels)
+  - Generate button to create 3D model
+
+- **`/components/HelpPanel.tsx`** - User assistance
+  - Floating help button with keyboard shortcuts
+  - Workflow instructions
+  - Tips and best practices
 
 ## Technology Stack
 
@@ -39,11 +77,19 @@ See DATA_CONTRACT.md for complete field specifications.
 
 ## Current Status & Known Issues
 
-### Working Features (3D-First Implementation)
+### Working Features (Procedural Generation Architecture)
 - **3D Scene with React Three Fiber** - Full 3D environment with board and components
 - **Component Library** - All 89 components from enriched JSON data
 - **Drag & Drop System** - Components draggable using TransformControls
-- **Component Visualization** - 3D meshes with proper dimensions and labels
+- **Operations Timeline Panel** - Visual list of all procedural operations
+- **Operation Management** - Toggle enable/disable, reorder operations
+- **JSCAD Script Generation** - Convert operations to executable JSCAD code
+- **Component Recesses** - Horizontal cylindrical cradles for axial components
+- **Lead Hole Positioning** - Accurate hole placement using end_inset_mm
+- **Zip-tie Slots** - Add zip-tie features for securing inductors
+- **Wire Channels** - Create channels for wire routing
+- **Mounting Holes** - Add mounting holes with optional countersinks
+- **Help Panel** - Floating help with keyboard shortcuts and tips
 - **Collision Detection** - Real-time collision checking with visual warnings
 - **Board Preview Mode** - Toggle between Design View and Preview Board
 - **STL Export** - Binary STL generation via OpenJSCAD

@@ -3,7 +3,7 @@ import { serialize as serializeSTL } from '@jscad/stl-serializer'
 import { IGS } from '@/lib/igs-generator'
 
 const { cuboid, cylinder } = primitives
-const { translate, rotateZ } = transforms
+const { translate, rotateZ, rotateX } = transforms
 const { subtract, union } = booleans
 
 type JscadGeometry = object // JSCAD geometry type
@@ -26,23 +26,28 @@ export function generateJSCADModel(igs: IGS): JscadGeometry {
     let recess: JscadGeometry | null = null
     
     if (comp.recess.shape === 'cylinder') {
-      // Cylindrical recess for capacitors/resistors - horizontal orientation
+      // Cylindrical recess for capacitors/resistors - PROPER horizontal orientation
       const diameter = comp.recess.dimensions.diameter || 10
       const radius = diameter / 2 + 0.5 // 0.5mm clearance
       // Use actual body length for axial components
       const length = comp.recess.dimensions.width || comp.recess.dimensions.depth || 20
       
-      // Create cylinder along Y-axis (length direction)
+      // Create a horizontal cradle-shaped recess
+      // We create a cylinder and position it so only the top part cuts into the board
       recess = cylinder({
         radius: radius,
         height: length,
-        segments: 32
+        segments: 32,
+        center: [0, length/2, 0] // Center along Y axis
       })
       
-      // Rotate 90° around Z-axis to make it horizontal (along Y-axis)
-      recess = rotateZ(Math.PI / 2, recess)
-      // Position at correct depth from top of board
-      recess = translate([0, 0, igs.board.thickness / 2 - comp.recess.depth / 2], recess)
+      // Rotate 90° around X-axis to lay it horizontal (along Y-axis)
+      recess = rotateX(Math.PI / 2, recess)
+      
+      // Position so the cylinder cuts into the top of the board
+      // The cylinder center should be above the board surface
+      const recessY = igs.board.thickness/2 - comp.recess.depth + radius
+      recess = translate([0, 0, recessY], recess)
       
     } else if (comp.recess.shape === 'toroidal') {
       // Ring-shaped recess for coils
